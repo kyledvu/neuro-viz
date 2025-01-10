@@ -18,6 +18,8 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [plotData, setPlotData] = useState(null);
   const [plotType, setPlotType] = useState(null);
+  const [features, setFeatures] = useState([]);
+  const [selectedFeature, setSelectedFeature] = useState('');
 
   function parseCsvFile(file) {
     Papa.parse(file, {
@@ -30,7 +32,9 @@ function App() {
           headerName: field,
           width: 150,
         }));
+        const features = Object.keys(result.data[0] || {});
   
+        setFeatures(features);
         setGridRows(rows);
         setGridColumns(columns);
       },
@@ -93,59 +97,78 @@ function App() {
       }
   };
 
-  function handleLinePlotClick() {
-      setPlotType('line');
-      generateLinePlot();
-  };
+  function handlePlotSelect(event) {
+    const selectedPlot = event.target.value;
+    setPlotType(selectedPlot);
 
-  function handleViolinPlotClick() {
-      setPlotType('violin');
-      generateViolinPlot();
-  };
+    
+    if (selectedFeature && selectedPlot) {
+      generatePlot(selectedPlot, selectedFeature);
+    }
+  }
 
-  function generateLinePlot() {
+  function handleFeatureSelect(event) {
+    const feature = event.target.value;
+    setSelectedFeature(feature);
+
+    if (plotType && feature) {
+      generatePlot(plotType, feature);
+    }
+  }
+
+  const generatePlot = (plotType, feature) => {
     if (!selectedFile) {
       setError('No file selected for plotting');
       return;
     }
 
+    switch (plotType) {
+      case 'line':
+        generateLinePlot(feature);
+        break;
+      case 'violin':
+        generateViolinPlot(feature);
+        break;
+      default:
+        console.error('Unsupported plot type');
+    }
+  };
+
+  function generateLinePlot(feature) {
     Papa.parse(selectedFile, {
       header: true,
       dynamicTyping: true,
       complete: (results) => {
         const sortedData = results.data.sort((a, b) => a.idx - b.idx); // Sort by 'idx'
         const idx = sortedData.map((row) => row.idx);
-        const eegRaw = sortedData.map((row) => row.EEG_raw);
+        const featureData = sortedData.map((row) => row[feature]);
 
-        setPlotData({ idx, eegRaw });
+        setPlotData({ idx, featureData });
       },
       error: (error) => {
         console.error('Error parsing CSV for plot:', error);
         setError('Error parsing CSV for plot');
       },
     });
-  };
+  }
 
-  function generateViolinPlot() {
-    if (!selectedFile) {
-      setError('No file selected for plotting');
-      return;
-    }
-
+  function generateViolinPlot(feature) {
     Papa.parse(selectedFile, {
       header: true,
       dynamicTyping: true,
       complete: (results) => {
-        const data = results.data.filter((row) => row.EMG_z !== undefined && row.rodent_sleep !== undefined);
+        const data = results.data.filter(
+          (row) => row[feature] !== undefined && row.rodent_sleep !== undefined
+        );
 
-        // Group EMG_z values by rodent_sleep categories
+        // Group feature values by rodent_sleep categories
         const groupedData = {};
         data.forEach((row) => {
           const sleepStage = row.rodent_sleep; // Grouping column
           if (!groupedData[sleepStage]) {
             groupedData[sleepStage] = [];
           }
-          groupedData[sleepStage].push(row.EMG_z);
+          groupedData[sleepStage].push(row[feature]);
         });
 
         // Prepare traces for Plotly
@@ -153,8 +176,8 @@ function App() {
           type: 'violin',
           y: groupedData[sleepStage],
           name: `Sleep Stage ${sleepStage}`,
-          box: { visible: true }, // Show box plot within violin
-          meanline: { visible: true }, // Show mean line
+          box: { visible: true },
+          meanline: { visible: true },
         }));
 
         setPlotData({ traces });
@@ -164,7 +187,7 @@ function App() {
         setError('Error parsing CSV for plot');
       },
     });
-  };
+  }
 
   return (
     <div className="App">
@@ -185,10 +208,11 @@ function App() {
         <DataGridDisplay files={files} onFileClick={handleFileClick} rows={gridRows} columns={gridColumns} />
       )}
       <VisualizationControls
-        onLinePlotClick={handleLinePlotClick}
-        onViolinPlotClick={handleViolinPlotClick}
+        features={features}
+        onPlotSelect={handlePlotSelect}
+        onFeatureSelect={handleFeatureSelect}
       />
-      <PlotDisplay plotType={plotType} plotData={plotData} />
+      <PlotDisplay plotType={plotType} plotData={plotData} feature={selectedFeature} />
     </div>
   );
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import Plot from 'react-plotly.js';
 
-function PlotDisplay({ plotType, plotData }) {
+function PlotDisplay({ plotType, plotData, feature }) {
   return (
     <div className="plot-container">
       {plotType === 'line' && plotData && (
@@ -9,16 +9,16 @@ function PlotDisplay({ plotType, plotData }) {
           data={[
             {
               x: plotData.idx,
-              y: plotData.eegRaw,
+              y: plotData.featureData,
               type: 'scatter',
               mode: 'lines',
               name: 'EEG Raw',
             },
           ]}
           layout={{
-            title: 'EEG Raw vs Index (Line Plot)',
+            title: `${feature} vs Index (Line Plot)`,
             xaxis: { title: 'Index (idx)' },
-            yaxis: { title: 'EEG Raw' },
+            yaxis: { title: feature },
           }}
         />
       )}
