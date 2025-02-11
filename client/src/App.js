@@ -7,6 +7,7 @@ import DataGridDisplay from './components/DataGridDisplay';
 import VisualizationControls from './components/VisualizationControls';
 import PlotDisplay from './components/PlotDisplay';
 import TabDisplay from './components/TabDisplay';
+import ModelSettings from './components/ModelSettings'
 
 function App() {
   const [files, setFiles] = useState([]);
@@ -110,6 +111,11 @@ function App() {
       setPlotType("raw-data"); // Reset plot type
       setSelectedFeature(null); // Reset selected feature
     }
+  };
+
+  const handleModelSettingsSubmit = (settings) => {
+    console.log("User-selected settings:", settings);
+    // Process settings as needed
   };
 
   function handlePlotSelect(event) {
@@ -292,9 +298,7 @@ function App() {
           />
         </>
       ) : (
-        <div className="model-settings">
-          <p>Edit Model Settings stuff</p>
-        </div>
+        <ModelSettings onSubmit={handleModelSettingsSubmit} />
       )}
     </div>
   );
