@@ -6,6 +6,7 @@ import FileUpload from './components/FileUpload';
 import DataGridDisplay from './components/DataGridDisplay';
 import VisualizationControls from './components/VisualizationControls';
 import PlotDisplay from './components/PlotDisplay';
+import TabDisplay from './components/TabDisplay';
 
 function App() {
   const [files, setFiles] = useState([]);
@@ -253,10 +254,7 @@ function App() {
         error={error}
       />
       
-      <div className="tabs">
-        <button className="btn leftbtn">Visualization Display</button>
-        <button className="btn">Edit Model Settings</button>
-      </div>
+      <TabDisplay/>
 
       {/* If plotType is selected, show plot. Otherwise, show DataGrid */}
       {plotType && plotType !== "raw-data" ? (
