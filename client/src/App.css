@@ -140,6 +140,21 @@ input[type="file"] {
   align-items: center;
 }
 
+.model-settings {
+  display:flex;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  width: 1100px;
+  height:550px;
+  color: #c9c9c9;
+  background-color: #333333;
+  border-radius: 5px;
+  justify-content: center;
+  align-items: center;
+}
+
 .btn {
   color: #c9c9c9;
   background-color: #1a1a1a;
@@ -170,6 +185,7 @@ input[type="file"] {
   justify-content: center;
   margin-top: 25px;
 }
+
 .selected-files {
   width: 150px;
   height: 550px;

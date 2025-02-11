@@ -1,24 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 
-function TabDisplay() {
-  // State to track the selected button
-  const [selectedTab, setSelectedTab] = useState("Visualization Display");
-
-  const handleButtonClick = (tab) => {
-    setSelectedTab(tab);
-  };
-
+function TabDisplay({ selectedTab, setSelectedTab }) {
   return (
     <div className="tabs">
       <button
         className={`btn leftbtn ${selectedTab === "Visualization Display" ? "selected" : ""}`}
-        onClick={() => handleButtonClick("Visualization Display")}
+        onClick={() => setSelectedTab("Visualization Display")}
       >
         Visualization Display
       </button>
       <button
         className={`btn ${selectedTab === "Edit Model Settings" ? "selected" : ""}`}
-        onClick={() => handleButtonClick("Edit Model Settings")}
+        onClick={() => setSelectedTab("Edit Model Settings")}
       >
         Edit Model Settings
       </button>

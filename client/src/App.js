@@ -21,6 +21,7 @@ function App() {
   const [plotType, setPlotType] = useState(null);
   const [features, setFeatures] = useState([]);
   const [selectedFeature, setSelectedFeature] = useState('');
+  const [selectedTab, setSelectedTab] = useState("Visualization Display");
 
   function parseCsvFile(file) {
     Papa.parse(file, {
@@ -100,6 +101,15 @@ function App() {
         setIsProcessing(false);  // Stop the loader
         setIsDone(false);  // Do not mark as done
       }
+  };
+
+  const handleTabChange = (tab) => {
+    setSelectedTab(tab);
+
+    if (tab === "Edit Model Settings") {
+      setPlotType("raw-data"); // Reset plot type
+      setSelectedFeature(null); // Reset selected feature
+    }
   };
 
   function handlePlotSelect(event) {
@@ -254,32 +264,38 @@ function App() {
         error={error}
       />
       
-      <TabDisplay/>
+      <TabDisplay selectedTab={selectedTab} setSelectedTab={handleTabChange} />
 
-      {/* If plotType is selected, show plot. Otherwise, show DataGrid */}
-      {plotType && plotType !== "raw-data" ? (
-        <PlotDisplay plotType={plotType} plotData={plotData} feature={selectedFeature} />
-      ) : gridRows.length > 0 && gridColumns.length > 0 ? (
-        <DataGridDisplay
-          files={files}
-          onFileClick={handleFileClick}
-          rows={gridRows}
-          columns={gridColumns}
-        />
+      {selectedTab === "Visualization Display" ? (
+        <>
+          {plotType && plotType !== "raw-data" ? (
+            <PlotDisplay plotType={plotType} plotData={plotData} feature={selectedFeature} />
+          ) : gridRows.length > 0 && gridColumns.length > 0 ? (
+            <DataGridDisplay
+              files={files}
+              onFileClick={handleFileClick}
+              rows={gridRows}
+              columns={gridColumns}
+            />
+          ) : (
+            <div className="empty-state-message">
+              <p>
+                Your uploaded data will appear here. Please select the "Choose Files" button to begin.
+              </p>
+            </div>
+          )}
+
+          <VisualizationControls
+            features={features}
+            onPlotSelect={handlePlotSelect}
+            onFeatureSelect={handleFeatureSelect}
+          />
+        </>
       ) : (
-        <div className="empty-state-message">
-          <p>
-            Your uploaded data will appear here. Please select the "Choose Files" button to begin.
-          </p>
+        <div className="model-settings">
+          <p>Edit Model Settings stuff</p>
         </div>
       )}
-
-      <VisualizationControls
-        features={features}
-        onPlotSelect={handlePlotSelect}
-        onFeatureSelect={handleFeatureSelect}
-      />
-      <PlotDisplay plotType={plotType} plotData={plotData} feature={selectedFeature} />
     </div>
   );
 

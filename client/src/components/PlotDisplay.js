@@ -15,8 +15,8 @@ function PlotDisplay({ plotType, plotData, feature }) {
             },
           ]}
           layout={{
-            title: `${feature} vs Index (Line Plot)`,
-            xaxis: { title: 'Index (idx)' },
+            title: `${feature} vs Index`,
+            xaxis: { title: 'Index' },
             yaxis: { title: feature },
           }}
         />
