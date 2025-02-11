@@ -32,7 +32,7 @@ function App() {
           headerName: field,
           width: 150,
         }));
-        const features = Object.keys(result.data[0] || {});
+        const features = Object.keys(result.data[0] || {}).filter(field => field.trim() !== "");
   
         setFeatures(features);
         setGridRows(rows);
@@ -61,6 +61,10 @@ function App() {
   function handleFileClick(file) {
     setSelectedFile(file);
     parseCsvFile(file);
+
+    if (plotType && selectedFeature) {
+      generatePlot(plotType, selectedFeature)
+    }
   };
 
   async function handleSubmit(event) {
@@ -98,21 +102,21 @@ function App() {
   };
 
   function handlePlotSelect(event) {
-    const selectedPlot = event.target.value;
-    setPlotType(selectedPlot);
+    const plotType = event.target.value;
+    setPlotType(plotType);
 
     
-    if (selectedFeature && selectedPlot) {
-      generatePlot(selectedPlot, selectedFeature);
+    if (plotType && selectedFeature) {
+      generatePlot(plotType, selectedFeature);
     }
   }
 
   function handleFeatureSelect(event) {
-    const feature = event.target.value;
-    setSelectedFeature(feature);
+    const selectedFeature = event.target.value;
+    setSelectedFeature(selectedFeature);
 
-    if (plotType && feature) {
-      generatePlot(plotType, feature);
+    if (plotType && selectedFeature) {
+      generatePlot(plotType, selectedFeature);
     }
   }
 
@@ -128,6 +132,9 @@ function App() {
         break;
       case 'violin':
         generateViolinPlot(feature);
+        break;
+      case 'bar':
+        generateBarPlot(feature)
         break;
       default:
         console.error('Unsupported plot type');
@@ -189,6 +196,51 @@ function App() {
     });
   }
 
+  function generateBarPlot(feature) {
+    Papa.parse(selectedFile, {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const data = results.data.filter(
+          (row) => row[feature] !== undefined && row.rodent_sleep !== undefined
+        );
+  
+        const featureCounts = {};
+  
+        data.forEach((row) => {
+          if (row.hasOwnProperty(feature) && row[feature] !== undefined && row[feature] !== null && row[feature] !== '') {
+            const value = String(row[feature]).trim();
+            featureCounts[value] = (featureCounts[value] || 0) + 1;
+          }
+        });
+  
+        const labels = Object.keys(featureCounts);
+        const counts = Object.values(featureCounts);
+  
+        console.log(labels, counts)
+        setPlotData({ labels, counts });
+      },
+      error: (error) => {
+        console.error("Error parsing CSV for bar plot:", error);
+        setError("Error parsing CSV for bar plot");
+      },
+    });
+  }
+  
+  const placeholderColumns = [
+    { field: "placeholder1", headerName: "Column 1", width: 150 },
+    { field: "placeholder2", headerName: "Column 2", width: 150 },
+    { field: "placeholder3", headerName: "Column 3", width: 150 },
+  ];
+  
+  const placeholderRows = Array.from({ length: 5 }, (_, index) => ({
+    id: index,
+    placeholder1: "",
+    placeholder2: "",
+    placeholder3: "",
+  }));
+  
   return (
     <div className="App">
       <h1>Score and Cluster Data</h1>
@@ -200,13 +252,30 @@ function App() {
         zipFileUrl={zipFileUrl}
         error={error}
       />
+      
       <div className="tabs">
         <button className="btn leftbtn">Visualization Display</button>
         <button className="btn">Edit Model Settings</button>
       </div>
-      {gridRows.length > 0 && gridColumns.length > 0 && (
-        <DataGridDisplay files={files} onFileClick={handleFileClick} rows={gridRows} columns={gridColumns} />
+
+      {/* If plotType is selected, show plot. Otherwise, show DataGrid */}
+      {plotType && plotType !== "raw-data" ? (
+        <PlotDisplay plotType={plotType} plotData={plotData} feature={selectedFeature} />
+      ) : gridRows.length > 0 && gridColumns.length > 0 ? (
+        <DataGridDisplay
+          files={files}
+          onFileClick={handleFileClick}
+          rows={gridRows}
+          columns={gridColumns}
+        />
+      ) : (
+        <div className="empty-state-message">
+          <p>
+            Your uploaded data will appear here. Please select the "Choose Files" button to begin.
+          </p>
+        </div>
       )}
+
       <VisualizationControls
         features={features}
         onPlotSelect={handlePlotSelect}

@@ -12,7 +12,6 @@ function PlotDisplay({ plotType, plotData, feature }) {
               y: plotData.featureData,
               type: 'scatter',
               mode: 'lines',
-              name: 'EEG Raw',
             },
           ]}
           layout={{
@@ -26,11 +25,31 @@ function PlotDisplay({ plotType, plotData, feature }) {
         <Plot
           data={plotData.traces}
           layout={{
-            title: 'EMG_z Distribution by Rodent Sleep Stage',
-            yaxis: { title: 'EMG_z' },
+            title: `${feature} Distribution by Rodent Sleep Stage`,
+            yaxis: { title: feature },
             violingroupgap: 0.4,
           }}
         />
+      )}
+      {plotType === 'bar' && plotData && (
+        <Plot
+          data={[
+            {
+              x: plotData.labels,
+              y: plotData.counts,
+              type: 'bar',
+            },
+          ]}
+          layout={{
+            title: `${feature} Distribution`,
+            xaxis: { 
+              title: 'Labels',
+              type: 'category'
+            },
+            yaxis: { title: 'Counts' },
+          }}
+        />
+
       )}
     </div>
   );
