@@ -1,0 +1,29 @@
+{
+  "layer_specs": [
+    7,
+    50,
+    50,
+    3
+  ],
+  "activation_fun": "sigmoid",
+  "learning_rate": 0.00003,
+  "batch_size": "501",
+  "epochs": 400,
+  "early_stop": true,
+  "early_stop_epoch": "11",
+  "L2_penalty": 0.001,
+  "momentum": true,
+  "momentum_gamma": 0.85,
+  "validation_ratio": 5,
+  "EMG_top_outlier": 0.05,
+  "wave_length_outlier_STD": 4,
+  "EEG_outlier_STD": 2,
+  "training_dataset_samples": 5000,
+  "experiment_start_time": 19,
+  "ZT_frequency": 2,
+  "train_folder_name": "train_data/",
+  "test_folder_name": "test_data/",
+  "is_dft_included": false,
+  "clustered_data": "clustered_data.csv",
+  "is_dft_exists": false
+}

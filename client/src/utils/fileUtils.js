@@ -16,7 +16,9 @@ export function handleFileChange(fileList, setFiles, setError, setIsDone, setSel
 
   
 
-export async function handleFileSubmit(files, setIsProcessing, setIsDone, setZipFileUrl, setError) {
+export async function handleFileSubmit(event, files, setIsProcessing, setIsDone, setZipFileUrl, setError) {
+  event.preventDefault();
+
   if (files.length === 0) {
     setError("No files selected");
     return;

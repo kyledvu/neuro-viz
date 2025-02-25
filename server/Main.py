@@ -21,6 +21,14 @@ import pickle
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 
+config_file = os.path.join(os.path.dirname(__file__), "config.json")
+
+def load_settings():
+    with open(config_file, "r") as f:
+        return json.load(f)
+
+settings = load_settings()
+
 def cluster_csv(file_path, output_folder):
     data = pd.read_csv(file_path, skiprows=[1])
     

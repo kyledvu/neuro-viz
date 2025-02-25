@@ -74,8 +74,8 @@ function App() {
         onFileChange={(event) =>
           handleFileChange(event.target.files, setFiles, setError, setIsDone, setSelectedFile, setFeatures, setGridRows, setGridColumns)
         }
-        onSubmit={() =>
-          handleFileSubmit(files, setIsProcessing, setIsDone, setZipFileUrl, setError)
+        onSubmit={(event) =>
+          handleFileSubmit(event, files, setIsProcessing, setIsDone, setZipFileUrl, setError)
         }
         isProcessing={isProcessing}
         isDone={isDone}
