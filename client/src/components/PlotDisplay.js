@@ -1,6 +1,22 @@
 import React from 'react';
 import Plot from 'react-plotly.js';
 
+const darkLayout = {
+  paper_bgcolor: '#1a1a1a',
+  plot_bgcolor: '#1a1a1a',
+  font: { color: '#ffffff' },
+  height: 547,
+  width: 950,
+  xaxis: {
+    gridcolor: '#333333', 
+    zerolinecolor: '#555555', 
+  },
+  yaxis: {
+    gridcolor: '#333333', 
+    zerolinecolor: '#555555',
+  },
+};
+
 function PlotDisplay({ plotType, plotData, feature }) {
   return (
     <div className="plot-container">
@@ -18,6 +34,7 @@ function PlotDisplay({ plotType, plotData, feature }) {
             title: `${feature} vs Index`,
             xaxis: { title: 'Index' },
             yaxis: { title: feature },
+            ...darkLayout,
           }}
         />
       )}
@@ -28,6 +45,7 @@ function PlotDisplay({ plotType, plotData, feature }) {
             title: `${feature} Distribution by Rodent Sleep Stage`,
             yaxis: { title: feature },
             violingroupgap: 0.4,
+            ...darkLayout,
           }}
         />
       )}
@@ -47,6 +65,7 @@ function PlotDisplay({ plotType, plotData, feature }) {
               type: 'category'
             },
             yaxis: { title: 'Counts' },
+            ...darkLayout,
           }}
         />
 

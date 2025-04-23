@@ -1,39 +1,39 @@
 import React from 'react';
 import { DataGrid } from '@mui/x-data-grid';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
 
-function DataGridDisplay({ files, onFileClick, rows, columns }) {
+const darkTheme = createTheme({
+    palette: {
+      mode: 'dark',
+    },
+  });
+
+function DataGridDisplay({ rows, columns }) {
   return (
-    <div className="vis-display">
-        <div className="selected-files">
-            <ul className="file-names">
-                {files.map((file, index) => (
-                <li key={index}>
-                    <button
-                    type="button"
-                    onClick={() => onFileClick(file)}
-                    className="file-btn"
-                    >
-                    {file.name}
-                    </button>
-                </li>
-                ))}
-            </ul>
-        </div>
-        <div className="data-grid">
-        <DataGrid
-            rows={rows}
-            columns={columns}
-            sx={{
-            color: '#c9c9c9',
-            '--DataGrid-containerBackground': '#1a1a1a',
-            '& .MuiTablePagination-root': {
-                color: '#FFFFFF',
-            },
-            }}
-        />
-        </div>
+    <div className="data-grid">
+        <ThemeProvider theme={darkTheme}>
+            <Box sx={{ height: 550 }}>
+                <DataGrid
+                    rows={rows}
+                    columns={columns}
+                    pageSize={5}
+                    disableRowSelectionOnClick
+                    sx={{
+                        '--DataGrid-containerBackground': '#1a1a1a',
+                        '& .MuiDataGrid-columnHeaders': {
+                        backgroundColor: '#1a1a1a',
+                        color: '#fff',
+                        },
+                        '& .MuiDataGrid-footerContainer': {
+                        backgroundColor: '#1a1a1a',
+                        color: '#ccc',
+                        },
+                    }}
+                />
+            </Box>
+        </ThemeProvider>
     </div>
-
   );
 }
 

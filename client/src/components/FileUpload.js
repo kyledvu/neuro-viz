@@ -11,11 +11,11 @@ function FileUpload({ onFileChange, onSubmit, isProcessing, isDone, zipFileUrl, 
           onChange={onFileChange}
           multiple
         />
-        <label htmlFor="file-upload" className="custom-btn">
+        <label htmlFor="file-upload" className="btn btn-secondary">
           Choose Files
         </label>
         <div className="button-status-column">
-          <button type="submit" className="custom-btn">
+          <button type="submit" className="btn btn-secondary">
             Upload and Process
           </button>
           <div className="status">

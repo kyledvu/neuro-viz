@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const ModelSettings = () => {
+function ModelSettings() {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const ModelSettings = () => {
       })
       .catch((error) => console.error("Error resetting config:", error));
   };
-  
+
   return (
     <div className="model-settings">
       <h3>Model Settings</h3>
@@ -113,6 +113,6 @@ const ModelSettings = () => {
       </form>
     </div>
   );
-};
+}
 
 export default ModelSettings;

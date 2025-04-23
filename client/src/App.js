@@ -1,6 +1,9 @@
 import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import React, { useState } from 'react';
+import HelpButton from './components/HelpButton';
 import FileUpload from './components/FileUpload';
+import FileListDisplay from './components/FileListDisplay';
 import DataGridDisplay from './components/DataGridDisplay';
 import VisualizationControls from './components/VisualizationControls';
 import PlotDisplay from './components/PlotDisplay';
@@ -30,7 +33,7 @@ function App() {
     parseCsvFile(file, setFeatures, setGridRows, setGridColumns, setError)
 
     if (plotType && selectedFeature) {
-      generatePlot(plotType, selectedFeature)
+      generatePlot(plotType, selectedFeature, selectedFile, setPlotData, setError)
     }
   };
 
@@ -82,27 +85,38 @@ function App() {
         zipFileUrl={zipFileUrl}
         error={error}
       />
-      
+
+      <HelpButton />
+
       <TabDisplay selectedTab={selectedTab} setSelectedTab={handleTabChange} />
 
       {selectedTab === "Visualization Display" ? (
         <>
-          {files.length === 0 ? (
-            <div className="empty-state-message">
-              <p>
-                Your uploaded data will appear here. Please select the "Choose Files" button to begin.
-              </p>
+          <div className="vis-display">
+            {files.length > 0 && (
+              <FileListDisplay files={files} onFileClick={handleFileClick} />
+            )}
+            <div className="data-content">
+              {files.length === 0 ? (
+                <div className="empty-state-message">
+                  <p>
+                    Your uploaded data will appear here. Please select the "Choose Files" button to begin.
+                  </p>
+                </div>
+              ) : selectedFeature && plotType && plotType !== "raw-data" ? (
+                <PlotDisplay
+                  plotType={plotType}
+                  plotData={plotData}
+                  feature={selectedFeature}
+                />
+              ) : gridRows.length > 0 && gridColumns.length > 0 ? (
+                <DataGridDisplay
+                  rows={gridRows}
+                  columns={gridColumns}
+                />
+              ) : null}
             </div>
-          ) : selectedFeature && plotType && plotType !== "raw-data" ? (
-            <PlotDisplay plotType={plotType} plotData={plotData} feature={selectedFeature} />
-          ) : gridRows.length > 0 && gridColumns.length > 0 ? (
-            <DataGridDisplay
-              files={files}
-              onFileClick={handleFileClick}
-              rows={gridRows}
-              columns={gridColumns}
-            />
-          ) : null}
+          </div>
 
           <VisualizationControls
             features={features}

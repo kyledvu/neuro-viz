@@ -26,7 +26,14 @@ function generateLinePlot(feature, file, setPlotData, setError) {
     header: true,
     dynamicTyping: true,
     complete: (results) => {
-      const sortedData = results.data.sort((a, b) => a.idx - b.idx);
+      let data = results.data;
+
+      const hasIdx = data.length > 0 && Object.prototype.hasOwnProperty.call(data[0], "idx");
+      if (!hasIdx) {
+        data = data.map((row, index) => ({ ...row, idx: index }));
+      }
+
+      const sortedData = data.sort((a, b) => a.idx - b.idx);
       const idx = sortedData.map((row) => row.idx);
       const featureData = sortedData.map((row) => row[feature]);
 
@@ -45,8 +52,16 @@ function generateViolinPlot(feature, file, setPlotData, setError) {
     dynamicTyping: true,
     complete: (results) => {
       const data = results.data.filter(
-        (row) => row[feature] !== undefined && row.rodent_sleep !== undefined
+        (row) =>
+          row[feature] !== undefined &&
+          row[feature] !== null &&
+          row[feature] !== '' &&
+          !isNaN(row[feature]) &&
+          row.rodent_sleep !== undefined &&
+          row.rodent_sleep !== null &&
+          row.rodent_sleep !== ''
       );
+      
 
       const groupedData = {};
       data.forEach((row) => {
