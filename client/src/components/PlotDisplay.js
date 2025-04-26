@@ -53,7 +53,7 @@ function PlotDisplay({ plotType, plotData, feature }) {
         <Plot
           data={[
             {
-              x: plotData.labels,
+              x: plotData.labels.map(String),
               y: plotData.counts,
               type: 'bar',
             },

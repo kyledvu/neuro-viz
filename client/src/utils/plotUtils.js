@@ -22,6 +22,7 @@ export function generatePlot(plotType, feature, selectedFile, setPlotData, setEr
 }
 
 function generateLinePlot(feature, file, setPlotData, setError) {
+  setPlotData(null);
   Papa.parse(file, {
     header: true,
     dynamicTyping: true,
@@ -40,13 +41,14 @@ function generateLinePlot(feature, file, setPlotData, setError) {
       setPlotData({ idx, featureData });
     },
     error: (error) => {
-      console.error("Error parsing CSV for plot:", error);
-      setError("Error parsing CSV for plot");
+      console.error("Error parsing CSV for line plot:", error);
+      setError("Error parsing CSV for line plot");
     },
   });
 }
 
 function generateViolinPlot(feature, file, setPlotData, setError) {
+  setPlotData(null);
   Papa.parse(file, {
     header: true,
     dynamicTyping: true,
@@ -83,16 +85,17 @@ function generateViolinPlot(feature, file, setPlotData, setError) {
       setPlotData({ traces });
     },
     error: (error) => {
-      console.error("Error parsing CSV for plot:", error);
-      setError("Error parsing CSV for plot");
+      console.error("Error parsing CSV for violin plot:", error);
+      setError("Error parsing CSV for violin plot");
     },
   });
 }
 
 function generateBarPlot(feature, file, setPlotData, setError) {
+  setPlotData(null);
   Papa.parse(file, {
     header: true,
-    dynamicTyping: true,
+    dynamicTyping: false,
     skipEmptyLines: true,
     complete: (results) => {
       const data = results.data.filter(
@@ -102,8 +105,9 @@ function generateBarPlot(feature, file, setPlotData, setError) {
       const featureCounts = {};
 
       data.forEach((row) => {
-        if (row.hasOwnProperty(feature) && row[feature] !== undefined) {
-          const value = String(row[feature]).trim();
+        const rawValue = row[feature];
+        if (rawValue !== undefined && rawValue !== null && rawValue !== "") {
+          const value = String(rawValue).trim();
           featureCounts[value] = (featureCounts[value] || 0) + 1;
         }
       });
