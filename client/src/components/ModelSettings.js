@@ -1,79 +1,78 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-const ModelSettings = ({ onSubmit }) => {
-  const [settings, setSettings] = useState({
-    learningRate: 0.00003,
-    batchSize: 500,
-    epochs: 400,
-    earlyStop: true,
-    earlyStopEpoch: 5,
-    L2Penalty: 0.001,
-    activationFun: "sigmoid",
-    validationRatio: 5,
-    EMGOutlier: 0.05,
-    waveOutlierSTD: 4,
-    EEGOutlierSTD: 2,
-    experimentStartTime: 19,
-    ZTFrequency: 2,
-    // Model settings that will be left fixed for now
-    layer_specs: [7, 50, 50, 3],
-    momentum: true,
-    momentum_gamma: 0.85,
-    training_testing_ratio: 5,
-    training_dataset_samples: 50 * 100,
+function ModelSettings() {
+  const [settings, setSettings] = useState(null);
 
-  });
+  useEffect(() => {
+    axios.get("http://localhost:8080/getConfig")
+      .then((response) => setSettings(response.data))
+      .catch((error) => console.error("Error fetching config:", error));
+  }, []);
+
+  if (!settings) return <p>Loading settings...</p>;
 
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target;
-    setSettings({
+    const updatedSettings = {
       ...settings,
       [name]: type === "checkbox" ? checked : value,
-    });
+    };
+    setSettings(updatedSettings);
+
+    axios.post("http://localhost:8080/updateConfig", updatedSettings)
+      .catch((error) => console.error("Error updating config:", error));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(settings);
+  const handleReset = () => {
+    axios.post("http://localhost:8080/resetConfig")
+      .then((response) => {
+        if (response.data.message) {
+          axios.get("http://localhost:8080/getConfig")
+            .then((res) => setSettings(res.data)) // Update state with fresh default values
+            .catch((error) => console.error("Error fetching config:", error));
+        }
+      })
+      .catch((error) => console.error("Error resetting config:", error));
   };
 
   return (
     <div className="model-settings">
       <h3>Model Settings</h3>
-      <form onSubmit={handleSubmit}>
+      <form>
         <label>
           Learning Rate:
-          <input type="number" step="0.00001" name="learningRate" value={settings.learningRate} onChange={handleChange} />
+          <input type="number" step="0.00001" name="learning_rate" value={settings.learning_rate} min="0" max="1" onChange={handleChange} />
         </label>
 
         <label>
           Batch Size:
-          <input type="number" name="batchSize" value={settings.batchSize} onChange={handleChange} />
+          <input type="number" name="batch_size" value={settings.batch_size} min="0" onChange={handleChange} />
         </label>
 
         <label>
           Epochs:
-          <input type="number" name="epochs" value={settings.epochs} onChange={handleChange} />
+          <input type="number" name="epochs" value={settings.epochs} min="0" onChange={handleChange} />
         </label>
 
         <label>
           Early Stopping:
-          <input type="checkbox" name="earlyStop" checked={settings.earlyStop} onChange={handleChange} />
+          <input type="checkbox" name="early_stop" checked={settings.early_stop} onChange={handleChange} />
         </label>
 
         <label>
           Early Stop Epoch:
-          <input type="number" name="earlyStopEpoch" value={settings.earlyStopEpoch} onChange={handleChange} />
+          <input type="number" name="early_stop_epoch" value={settings.early_stop_epoch} min="0" onChange={handleChange} />
         </label>
 
         <label>
           L2 Penalty:
-          <input type="number" step="0.0001" name="L2Penalty" value={settings.L2Penalty} onChange={handleChange} />
+          <input type="number" step="0.0001" name="L2_penalty" value={settings.L2_penalty} min="0" onChange={handleChange} />
         </label>
 
         <label>
           Activation Function:
-          <select name="activationFun" value={settings.activationFun} onChange={handleChange}>
+          <select name="activation_fun" value={settings.activation_fun} onChange={handleChange}>
             <option value="sigmoid">Sigmoid</option>
             <option value="relu">ReLU</option>
             <option value="tanh">Tanh</option>
@@ -82,38 +81,38 @@ const ModelSettings = ({ onSubmit }) => {
 
         <label>
           Validation Ratio:
-          <input type="number" name="validationRatio" value={settings.validationRatio} onChange={handleChange} />
+          <input type="number" name="validation_ratio" value={settings.validation_ratio} min="0" onChange={handleChange} />
         </label>
 
         <label>
           EMG Top Outlier:
-          <input type="number" step="0.01" name="EMGOutlier" value={settings.EMGOutlier} onChange={handleChange} />
+          <input type="number" step="0.01" name="EMG_top_outlier" value={settings.EMG_top_outlier} min="0" max="1" onChange={handleChange} />
         </label>
 
         <label>
           Wave Length Outlier STD:
-          <input type="number" name="waveOutlierSTD" value={settings.waveOutlierSTD} onChange={handleChange} />
+          <input type="number" name="wave_length_outlier_STD" value={settings.wave_length_outlier_STD} min="0" onChange={handleChange} />
         </label>
 
         <label>
           EEG Outlier STD:
-          <input type="number" name="EEGOutlierSTD" value={settings.EEGOutlierSTD} onChange={handleChange} />
+          <input type="number" name="EEG_outlier_STD" value={settings.EEG_outlier_STD} min="0" onChange={handleChange} />
         </label>
 
         <label>
           Experiment Start Time:
-          <input type="number" name="experimentStartTime" value={settings.experimentStartTime} onChange={handleChange} />
+          <input type="number" name="experiment_start_time" value={settings.experiment_start_time} min="0" max="23" onChange={handleChange} />
         </label>
 
         <label>
           ZT Frequency:
-          <input type="number" name="ZTFrequency" value={settings.ZTFrequency} onChange={handleChange} />
+          <input type="number" name="ZT_frequency" value={settings.ZT_frequency} min="0" max="24" onChange={handleChange} />
         </label>
 
-        <button type="submit">Apply Settings</button>
+        <button type="button" onClick={handleReset}>Reset to Default</button>
       </form>
     </div>
   );
-};
+}
 
 export default ModelSettings;
