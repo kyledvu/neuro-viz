@@ -6,7 +6,7 @@ from Testing import *
 from Training import *
 
 import numpy as np
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 
 def clean_for_scoring(mouse_data):
     
