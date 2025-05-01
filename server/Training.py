@@ -7,7 +7,7 @@ from Layer import *
 from NeuralNetwork import *
 
 import numpy as np
-import pickle
+# import pickle
 from matplotlib import pyplot as plt
 
 

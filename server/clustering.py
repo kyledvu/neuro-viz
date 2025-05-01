@@ -4,11 +4,11 @@ from Variables import *
 from Testing import *
 from Training import *
 
-import numpy as np
-from matplotlib import pyplot as plt
+# import numpy as np
+# from matplotlib import pyplot as plt
 
 from sklearn.metrics import confusion_matrix
-from sklearn.preprocessing import StandardScaler
+# from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 
 
