@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 function ModelSettings() {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
-    axios.get("http://localhost:8080/getConfig")
+    axios.get(`${API_BASE_URL}/getConfig`)
       .then((response) => setSettings(response.data))
       .catch((error) => console.error("Error fetching config:", error));
   }, []);
@@ -20,15 +22,15 @@ function ModelSettings() {
     };
     setSettings(updatedSettings);
 
-    axios.post("http://localhost:8080/updateConfig", updatedSettings)
+    axios.post(`${API_BASE_URL}/updateConfig`, updatedSettings)
       .catch((error) => console.error("Error updating config:", error));
   };
 
   const handleReset = () => {
-    axios.post("http://localhost:8080/resetConfig")
+    axios.post(`${API_BASE_URL}/resetConfig`)
       .then((response) => {
         if (response.data.message) {
-          axios.get("http://localhost:8080/getConfig")
+          axios.get(`${API_BASE_URL}/getConfig`)
             .then((res) => setSettings(res.data)) // Update state with fresh default values
             .catch((error) => console.error("Error fetching config:", error));
         }

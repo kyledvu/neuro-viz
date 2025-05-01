@@ -1,6 +1,8 @@
 import axios from "axios";
 import { parseCsvFile } from './csvUtils';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 export function handleFileChange(fileList, setFiles, setError, setIsDone, setSelectedFile, setFeatures, setGridRows, setGridColumns) {
     const selectedFiles = Array.from(fileList);
     setFiles(selectedFiles);
@@ -12,9 +14,7 @@ export function handleFileChange(fileList, setFiles, setError, setIsDone, setSel
       setSelectedFile(file);
       parseCsvFile(file, setFeatures, setGridRows, setGridColumns, setError);
     }
-}
-
-  
+}  
 
 export async function handleFileSubmit(event, files, setIsProcessing, setIsDone, setZipFileUrl, setError) {
   event.preventDefault();
@@ -24,7 +24,7 @@ export async function handleFileSubmit(event, files, setIsProcessing, setIsDone,
     return;
   }
 
-  const url = "http://localhost:8080/uploadFiles";
+  const url = `${API_BASE_URL}/uploadFiles`;
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
 
