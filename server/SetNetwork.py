@@ -23,8 +23,8 @@ def set_train_val_test(train_data, test_data):
     print("Number of Testing Epochs: \t", x_test.shape[0])
 
     data_len = x_train.shape[0]
-    x_val, y_val = (x_train[:data_len // training_testing_ratio], y_train[:data_len // training_testing_ratio])
-    x_train, y_train = (x_train[data_len // training_testing_ratio:], y_train[data_len // training_testing_ratio:])
+    x_val, y_val = (x_train[:data_len // validation_ratio], y_train[:data_len // validation_ratio])
+    x_train, y_train = (x_train[data_len // validation_ratio:], y_train[data_len // validation_ratio:])
 
 
     x_main_train = x_train

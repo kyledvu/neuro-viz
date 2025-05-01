@@ -8,7 +8,9 @@ from Training import *
 
 from scipy import stats
 import numpy as np
-from matplotlib import pyplot as plt
+import pandas as pd
+import glob
+# from matplotlib import pyplot as plt
 
 def clean_for_scoring(mouse_data):
     
