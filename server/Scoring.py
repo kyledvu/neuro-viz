@@ -1,12 +1,14 @@
 # Scoring.py
 
 import os
+
 from Variables import *
 from Testing import *
 from Training import *
 
+from scipy import stats
 import numpy as np
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 
 def clean_for_scoring(mouse_data):
     
