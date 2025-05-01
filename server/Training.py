@@ -8,7 +8,7 @@ from NeuralNetwork import *
 
 import numpy as np
 # import pickle
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 
 
 def find_accuracy(predicted, target):
@@ -58,21 +58,21 @@ def train(x_train, y_train, x_valid, y_valid):
             best_model = model
             num_bad_iterations = 0
 
-    plt.plot(np.arange(len(train_loss)), train_loss, label='Training Loss')
-    plt.plot(np.arange(len(valid_loss)), valid_loss, label='Validation Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss (Cross-Entropy)')
-    plt.title('Training & validation losses across epochs')
-    plt.legend()
-    plt.show()
+    # plt.plot(np.arange(len(train_loss)), train_loss, label='Training Loss')
+    # plt.plot(np.arange(len(valid_loss)), valid_loss, label='Validation Loss')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Loss (Cross-Entropy)')
+    # plt.title('Training & validation losses across epochs')
+    # plt.legend()
+    # plt.show()
 
-    plt.plot(np.arange(len(train_acc)), train_acc, label='Training Acc')
-    plt.plot(np.arange(len(valid_acc)), valid_acc, label='Validation Acc')
-    plt.xlabel('Epoch')
-    plt.ylabel('Acc')
-    plt.title('Training & validation accuracies across epochs')
-    plt.legend()
-    plt.show()
+    # plt.plot(np.arange(len(train_acc)), train_acc, label='Training Acc')
+    # plt.plot(np.arange(len(valid_acc)), valid_acc, label='Validation Acc')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Acc')
+    # plt.title('Training & validation accuracies across epochs')
+    # plt.legend()
+    # plt.show()
     return train_acc, valid_acc, train_loss, valid_loss, best_model
 
 
