@@ -1,8 +1,9 @@
 {
-  "name": "neuro-viz",
+  "name": "neuro-viz-root",
   "private": true,
   "scripts": {
-    "start": "npm --prefix server start",
-    "build": "npm --prefix client run build && npm --prefix server run build"
+    "install": "npm ci --prefix client && npm ci --prefix server",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server"
   }
 }
