@@ -21,3 +21,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+temp/**/*
+!temp/**/
+!temp/**/.gitkeep
+
+uploads/*
+!uploads/.gitkeep
