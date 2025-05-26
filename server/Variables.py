@@ -19,6 +19,7 @@ momentum = settings["momentum"]
 momentum_gamma = settings["momentum_gamma"]
 
 validation_ratio = settings["validation_ratio"] 
+train_test_ratio = settings["train_test_ratio"]
 
 EMG_top_outlier = settings["EMG_top_outlier"]
 wave_length_outlier_STD = settings["wave_length_outlier_STD"]

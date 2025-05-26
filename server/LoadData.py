@@ -3,14 +3,12 @@
 from Variables import *
 from MyFunctions import *
 
-
 # import numpy as np
 import pandas as pd
 # import random 
 # import math
 import glob
 from scipy import stats
-
 
 def clean_data(mouse_data):
 
@@ -68,22 +66,16 @@ def clean_data_raw(mouse_data):
 
 def read_input():
 
-    file_type = 'csv'
-    seperator =','
-
     train_data = pd.DataFrame()
-    for f in glob.glob(train_folder_name + "/*."+file_type):
+    for f in glob.glob(train_folder_name + "/*"):
         cur_input = pd.read_csv(f)
         clean_input = clean_data(cur_input)
         clean_input = clean_input[['Rodent Sleep', 'EMG_z', 'Delta_z', 'Theta_z', 'Alpha_z', 'Sigma_z', 'Beta_z', 'EEG_z']]
         clean_input = clean_input.sample(training_dataset_samples)
         train_data = train_data.append(clean_input)
-            
-    file_type = 'csv'
-    seperator =','
-    test_data = pd.DataFrame()
 
-    for f in glob.glob(test_folder_name + "/*."+file_type):
+    test_data = pd.DataFrame()
+    for f in glob.glob(test_folder_name + "/*"):
         cur_input = pd.read_csv(f)
         clean_input = clean_data(cur_input)
         clean_input = clean_input[['Rodent Sleep', 'EMG_z', 'Delta_z', 'Theta_z', 'Alpha_z', 'Sigma_z', 'Beta_z', 'EEG_z']]
@@ -97,7 +89,6 @@ def read_input():
     for i in range(0, int(k)):
         train_data = train_data.append(rem_train)
 
-        
     return train_data, test_data
 
 # Don't filter out raw EEG values or shuffle
@@ -133,8 +124,6 @@ def load_data():
 
     train_data = train_data.to_numpy()
     test_data = test_data.to_numpy() 
-    
-    print(train_data.shape, test_data.shape)
 
     x_train = train_data[: , 1:8]
     y_train = train_data[: , 0]
@@ -145,9 +134,6 @@ def load_data():
     x_train, y_train = shuffle_unison(x_train, y_train)  
     y_train = one_hot_encoding(y_train)
     y_test = one_hot_encoding(y_test)
-
-    print("Number of Training Epochs: \t", x_train.shape[0])
-    print("Number of Testing Epochs: \t", x_test.shape[0])
 
     data_len = x_train.shape[0]
     x_val, y_val = (x_train[:data_len // validation_ratio], y_train[:data_len // validation_ratio])

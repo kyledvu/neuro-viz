@@ -29,7 +29,6 @@ def clean_for_scoring(mouse_data):
     mouse_data['Beta_raw'] = mouse_data['Beta']
     mouse_data['EMG_raw'] = mouse_data['EMG']
     mouse_data['EEG_raw'] = mouse_data['EEG']
-    #print(mouse_data['Delta'])
     mouse_data['Delta_z'] = stats.zscore(mouse_data['Delta'], ddof=1)
     mouse_data['Theta_z'] = stats.zscore(mouse_data['Theta'], ddof=1)
     mouse_data['Alpha_z'] = stats.zscore(mouse_data['Alpha'], ddof=1)
@@ -63,9 +62,6 @@ def clean_for_scoring(mouse_data):
                                  'Temp']]
     
     return mouse_data
-
-
-
 
 def get_scored(clean_input, best_model, x_main_train, x_main_val):
     saved_data = clean_input
@@ -116,22 +112,17 @@ def get_scored(clean_input, best_model, x_main_train, x_main_val):
 
 # Delete unnecessary columns and rename old column names to new column names
 def clean_cols(df):
-    # Safely drop columns that exist in the DataFrame
     columns_to_remove = [
-        'Delta', 
-        'Theta', 
-        'Alpha', 
         'Theta Ratio',
         'Activity (Mean; 10s)',
+        # 'Delta', 
+        # 'Theta', 
+        # 'Alpha', 
         # 'EEG (total; 0.5-25Hz ; 10s)', 
     ]
-
-    # Drop columns only if they exist
     df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
-    # Safely rename columns
     column_rename_mapping = {
-        'Time Stamp': 'Time Stamp',
         'EMG (RMS; 10s)': 'EMG',
         'EEG (Delta; 0.5-4Hz)/(total; 0.5-25Hz)); 10s)': 'Delta',
         'EEG (Theta; 4-8Hz)/(total; 0.5-25Hz)); 10s)': 'Theta',
@@ -142,15 +133,17 @@ def clean_cols(df):
         'Temperature 2 (Mean; 10s)': 'Temp',
     }
 
-    # Create a safe rename dictionary, only keeping keys that exist in the DataFrame
-    safe_column_rename_mapping = {k: v for k, v in column_rename_mapping.items() if k in df.columns}
-
-    # Rename columns
+    safe_column_rename_mapping = {
+        old_name: new_name for old_name, new_name in column_rename_mapping.items()
+        if old_name in df.columns and new_name not in df.columns
+    }
     df.rename(columns=safe_column_rename_mapping, inplace=True)
-       
+
     unnamed_cols = [col for col in df.columns if 'Unnamed' in col]
     df.drop(columns=unnamed_cols, inplace=True)
+
     return df
+
 
 def score_data(best_model, x_main_train, x_main_val):
     file_type = 'csv'
@@ -187,7 +180,6 @@ def score_data_df(data, best_model, x_main_train, x_main_val):
     seperator =','
     
     cur_input = clean_cols(data)
-    
     clean_input = clean_for_scoring(cur_input)
 
     scored_data = get_scored(clean_input, best_model, x_main_train, x_main_val)

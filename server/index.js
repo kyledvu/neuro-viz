@@ -13,6 +13,33 @@ const upload = multer({ dest: 'uploads/' });
 
 app.use(cors());
 app.use(express.json());
+app.use('/temp/download', express.static(path.join(__dirname, 'temp/download')));
+
+function cleanupUploadedFiles(reqFiles) {
+  // Delete uploaded temp files
+  reqFiles.forEach((file) => {
+    fs.unlink(file.path, (err) => {
+      if (err) console.error(`Error deleting uploaded file ${file.path}:`, err);
+    });
+  });
+
+  // Delete files inside train_data and test_data folders
+  ['temp/train_data', 'temp/test_data'].forEach((dir) => {
+    const dirPath = path.join(__dirname, dir);
+    fs.readdir(dirPath, (err, files) => {
+      if (err) {
+        console.error(`Error reading ${dirPath}:`, err);
+        return;
+      }
+      files.forEach((filename) => {
+        const filePath = path.join(dirPath, filename);
+        fs.unlink(filePath, (err) => {
+          if (err) console.error(`Error deleting file ${filePath}:`, err);
+        });
+      });
+    });
+  });
+}
 
 // Route to get the current model settings
 app.get("/getConfig", (req, res) => {
@@ -48,12 +75,101 @@ app.post("/resetConfig", (req, res) => {
   });
 });
 
-// Route to handle multiple file uploads
+// Route to train model from multiple file uploads
+app.post('/trainModel', upload.array('files'), (req, res) => {
+  const inputFilePaths = req.files.map(file => path.join(__dirname, file.path));
+  const splitProcess = spawn('python', ['SplitData.py', ...inputFilePaths]);
+
+  splitProcess.stderr.on('data', (data) => {
+    console.error(`Split script error: ${data}`);
+  });
+
+  splitProcess.on('close', (splitCode) => {
+    if (splitCode !== 0) {
+      cleanupUploadedFiles(req.files);
+      return res.status(500).send({ message: 'Splitting failed' });
+    }
+
+    const trainProcess = spawn('python', ['-u', 'TrainFromUpload.py']);
+
+    let trainOutput = '';
+
+    trainProcess.stdout.on('data', (data) => {
+      trainOutput += data.toString();
+    });
+
+    trainProcess.stderr.on('data', (data) => {
+      console.error(`Training script error: ${data}`);
+    });
+
+    trainProcess.on('close', (trainCode) => {
+      if (trainCode !== 0) {
+        cleanupUploadedFiles(req.files);
+        return res.status(500).send({ message: 'Training failed' });
+      }
+
+      let outputData;
+      try {
+        outputData = JSON.parse(trainOutput);
+      } catch (e) {
+        console.error('Failed to parse training output:', e);
+        cleanupUploadedFiles(req.files);
+        return res.status(500).send({ message: 'Invalid training output' });
+      }
+
+      const modelSrcPath = path.join(__dirname, 'trained_network.pkl');
+      const modelDestPath = path.join(__dirname, 'temp/download', 'trained_network.pkl');
+
+      fs.rename(modelSrcPath, modelDestPath, (err) => {
+        if (err) {
+          console.error("Error moving trained model:", err);
+          cleanupUploadedFiles(req.files);
+          return res.status(500).send({ message: 'Could not prepare download' });
+        }
+
+        res.send({
+          ...outputData,
+          downloadUrl: '/temp/download/trained_network.pkl',
+        });
+
+        res.on('finish', () => {
+          cleanupUploadedFiles(req.files);
+        });
+      });
+    });
+  });
+});
+
+// Route to score and cluster multiple file uploads
+// Route to score and cluster multiple file uploads
 app.post('/uploadFiles', upload.array('files'), (req, res) => {
   const inputFilePaths = req.files.map((file) => path.join(__dirname, file.path));
 
+  const cleanupFiles = (outputData = null) => {
+    // Clean uploaded files
+    req.files.forEach((file) => {
+      fs.unlink(file.path, (err) => {
+        if (err) console.error(`Error deleting uploaded file ${file.path}:`, err);
+      });
+    });
+
+    // Clean processed output files if available
+    if (outputData) {
+      const allPaths = [
+        ...Object.values(outputData.scored || {}),
+        ...Object.values(outputData.clustered || {}),
+      ];
+
+      allPaths.forEach((filePath) => {
+        fs.unlink(filePath, (err) => {
+          if (err) console.error(`Error deleting processed file ${filePath}:`, err);
+        });
+      });
+    }
+  };
+
   // Spawn a Python process to score and cluster the data
-  const pythonProcess = spawn('python', ['Main.py', ...inputFilePaths]);
+  const pythonProcess = spawn('python', ['Process.py', ...inputFilePaths]);
 
   let jsonOutput = '';
 
@@ -69,59 +185,61 @@ app.post('/uploadFiles', upload.array('files'), (req, res) => {
 
   // Once the Python process completes
   pythonProcess.on('close', (code) => {
-    if (code === 0) {
-      const outputData = JSON.parse(jsonOutput);
-
-      // Create a ZIP archive and send it to the client
-      const archive = archiver('zip');
-      res.setHeader('Content-Type', 'application/zip');
-      res.setHeader('Content-Disposition', 'attachment; filename="processed_files.zip"');
-      archive.pipe(res);
-
-      req.files.forEach((file) => {
-        const originalName = path.parse(file.originalname).name; // Strip the extension
-        const newScoredFilename = `${originalName}_scored.csv`;
-        const scoredPath = path.normalize(outputData.scored[file.filename]);
-      
-        if (scoredPath && fs.existsSync(scoredPath)) {
-          archive.file(scoredPath, { name: `scored/${newScoredFilename}` });
-        } else {
-          console.error(`Scored file not found: ${scoredPath}`);
-        }
-      
-        const newClusteredFilename = `${originalName}_clustered.csv`;
-        const clusteredPath = path.normalize(outputData.clustered[file.filename]);
-      
-        if (clusteredPath && fs.existsSync(clusteredPath)) {
-          archive.file(clusteredPath, { name: `clustered/${newClusteredFilename}` });
-        } else {
-          console.error(`Clustered file not found: ${clusteredPath}`);
-        }
-      });
-      
-      // Finalize the archive and trigger cleanup after the archive stream ends
-      archive.finalize();
-
-      archive.on('end', () => {
-        // Clean up uploaded files
-        req.files.forEach((file) => {
-          fs.unlink(file.path, (err) => {
-            if (err) console.error(`Error deleting file ${file.path}:`, err);
-          });
-        });
-
-        // Clean up processed files
-        [...Object.values(outputData.scored), ...Object.values(outputData.clustered)].forEach((file) => {
-          fs.unlink(file, (err) => {
-            if (err) console.error(`Error deleting file ${file}:`, err);
-          });
-        });
-      });
-    } else {
-      res.status(500).send({ message: 'Python script failed', error: `Exit code: ${code}` });
+    if (code !== 0) {
+      cleanupFiles(); // clean only uploads, no processed output
+      return res.status(500).send({ message: 'Python script failed', error: `Exit code: ${code}` });
     }
+
+    let outputData;
+    try {
+      outputData = JSON.parse(jsonOutput);
+    } catch (e) {
+      console.error("Failed to parse Python output:", e);
+      cleanupFiles(); // clean only uploads, no processed output
+      return res.status(500).send({ message: 'Invalid output from Python script' });
+    }
+
+    // Create a ZIP archive and send it to the client
+    const archive = archiver('zip');
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="processed_files.zip"');
+    archive.pipe(res);
+
+    req.files.forEach((file) => {
+      const originalName = path.parse(file.originalname).name;
+      const newScoredFilename = `${originalName}_scored.csv`;
+      const scoredPath = path.normalize(outputData.scored[file.filename]);
+
+      if (scoredPath && fs.existsSync(scoredPath)) {
+        archive.file(scoredPath, { name: `scored/${newScoredFilename}` });
+      } else {
+        console.error(`Scored file not found: ${scoredPath}`);
+      }
+
+      const newClusteredFilename = `${originalName}_clustered.csv`;
+      const clusteredPath = path.normalize(outputData.clustered[file.filename]);
+
+      if (clusteredPath && fs.existsSync(clusteredPath)) {
+        archive.file(clusteredPath, { name: `clustered/${newClusteredFilename}` });
+      } else {
+        console.error(`Clustered file not found: ${clusteredPath}`);
+      }
+    });
+
+    archive.finalize();
+
+    archive.on('end', () => {
+      cleanupFiles(outputData);
+    });
+
+    archive.on('error', (err) => {
+      console.error("Error creating ZIP archive:", err);
+      cleanupFiles(outputData);
+      res.status(500).send({ message: 'Failed to create archive' });
+    });
   });
 });
+
 
 // Start the server
 app.listen(port, () => {

@@ -1,10 +1,18 @@
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+console.log(API_BASE_URL);
 
 function ModelSettings() {
   const [settings, setSettings] = useState(null);
+
+  const [files, setFiles] = useState([]);
+  const [modelStats, setModelStats] = useState(null);
+  const [downloadUrl, setDownloadUrl] = useState(null);
+  const [trainingError, setTrainingError] = useState(null);
+  const [isTraining, setIsTraining] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     axios.get(`${API_BASE_URL}/getConfig`)
@@ -37,6 +45,37 @@ function ModelSettings() {
       })
       .catch((error) => console.error("Error resetting config:", error));
   };
+
+  const handleSubmit = (e, selectedFiles) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    Array.from(selectedFiles).forEach(file => {
+      formData.append("files", file);
+    });
+
+    setIsTraining(true);
+    setModelStats(null);
+    setDownloadUrl(null);
+    setTrainingError(null);
+
+    axios.post(`${API_BASE_URL}/trainModel`, formData)
+      .then((response) => {
+        setModelStats(response.data);
+        setDownloadUrl(`${API_BASE_URL}${response.data.downloadUrl}`);
+      })
+      .catch((error) => {
+        console.error("Training failed:", error);
+        setTrainingError("Model training failed.");
+      })
+      .finally(() => {
+        setIsTraining(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      });
+  };
+
 
   return (
     <div className="model-settings">
@@ -108,8 +147,60 @@ function ModelSettings() {
 
         <label>
           ZT Frequency:
-          <input type="number" name="ZT_frequency" value={settings.ZT_frequency} min="0" max="24" onChange={handleChange} />
+          <input type="number" name="ZT_frequency" value={settings.ZT_frequency} min="1" max="24" onChange={handleChange} />
         </label>
+        <div className='model-select'>
+          <label className='model-upload'>
+            Upload Model
+            <input
+             type="file"
+             accept='.pkl'
+             name='trained_model'
+            />
+          </label>
+        </div>
+
+        <div className='model-training'>
+          <label className='train-data-upload'>
+            Upload Training Data
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              multiple
+              name="train_data"
+              onChange={(e) => {
+                const selected = e.target.files;
+                if (selected.length === 0) {
+                  console.warn("No files selected.");
+                  return;
+                }
+
+                console.log("Selected files:", selected);
+                setFiles(selected);
+                handleSubmit(e, selected);
+              }}
+            />
+          </label>
+          <div className="model-output">
+            {isTraining && <p>Training in progress...</p>}
+            {modelStats && (
+              <div>
+                <p>Training Accuracy: {modelStats.train_accuracy}</p>
+                <p>Validation Accuracy: {modelStats.validation_accuracy}</p>
+                <p>Loss: {modelStats.train_loss}</p>
+
+                {downloadUrl && (
+                  <a href={downloadUrl} download className="btn btn-primary">
+                    Download Trained Model
+                  </a>
+                )}
+              </div>
+            )}
+            {trainingError && <p style={{ color: 'red' }}>{trainingError}</p>}
+          </div>
+
+        </div>
 
         <button type="button" onClick={handleReset}>Reset to Default</button>
       </form>

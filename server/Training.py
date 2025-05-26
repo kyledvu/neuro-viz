@@ -27,7 +27,6 @@ def train(x_train, y_train, x_valid, y_valid):
     model = NeuralNetwork()
 
     for epoch in range(0, epochs):
-        print(f'M = {epoch}')
         x_train, y_train = shuffle_unison(x_train, y_train)
 
         for j in range(0, len(x_train), batch_size):

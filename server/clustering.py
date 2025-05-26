@@ -1,5 +1,3 @@
-# Scoring.py
-
 from Variables import *
 from Testing import *
 from Training import *
@@ -50,7 +48,6 @@ def get_cluster_ready():
     return clf
   
 def get_labels(x_class, clf):    
-    # Ensure slices are independent DataFrames
     x_class_PW = x_class.loc[x_class['rodent_sleep'] != 'S'].copy()
     x_class = x_class.loc[x_class['rodent_sleep'] == 'S'].copy()
 
