@@ -202,6 +202,14 @@ input[type="file"] {
   border: 1px solid #93a4b6;
   border-radius: 20px;
 }
+.model-settings .model-upload-output {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
 
 .model-settings .model-training {
   grid-column: 4 / span 1;

@@ -140,7 +140,28 @@ app.post('/trainModel', upload.array('files'), (req, res) => {
   });
 });
 
-// Route to score and cluster multiple file uploads
+// Route to upload a trained model (.pkl file)
+app.post('/uploadModel', upload.single('trained_model'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded.' });
+  }
+
+  const tempDownloadDir = path.join(__dirname, 'temp', 'download');
+  const targetPath = path.join(tempDownloadDir, 'trained_network.pkl');
+
+  fs.rename(req.file.path, targetPath, (err) => {
+    if (err) {
+      console.error('Error saving uploaded model:', err);
+      return res.status(500).json({ error: 'Failed to save model.' });
+    }
+
+    res.json({
+      message: 'Model uploaded and saved as trained_network.pkl',
+      downloadUrl: '/temp/download/trained_network.pkl',
+    });
+  });
+});
+
 // Route to score and cluster multiple file uploads
 app.post('/uploadFiles', upload.array('files'), (req, res) => {
   const inputFilePaths = req.files.map((file) => path.join(__dirname, file.path));

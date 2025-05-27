@@ -8,6 +8,8 @@ function ModelSettings() {
   const [settings, setSettings] = useState(null);
 
   const [files, setFiles] = useState([]);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
   const [modelStats, setModelStats] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [trainingError, setTrainingError] = useState(null);
@@ -39,11 +41,33 @@ function ModelSettings() {
       .then((response) => {
         if (response.data.message) {
           axios.get(`${API_BASE_URL}/getConfig`)
-            .then((res) => setSettings(res.data)) // Update state with fresh default values
+            .then((res) => setSettings(res.data)) 
             .catch((error) => console.error("Error fetching config:", error));
         }
       })
       .catch((error) => console.error("Error resetting config:", error));
+  };
+
+  const handleModelUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('trained_model', file);
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/uploadModel`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      console.log('Model uploaded successfully:', response.data);
+      setUploadSuccess('Model uploaded successfully!');
+      setUploadError(null);
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'Model upload failed.';
+      console.error('Error uploading model:', error);
+      setUploadError(errorMsg);
+      setUploadSuccess(null);
+    }
   };
 
   const handleSubmit = (e, selectedFiles) => {
@@ -149,6 +173,7 @@ function ModelSettings() {
           ZT Frequency:
           <input type="number" name="ZT_frequency" value={settings.ZT_frequency} min="1" max="24" onChange={handleChange} />
         </label>
+
         <div className='model-select'>
           <label className='model-upload'>
             Upload Model
@@ -156,8 +181,14 @@ function ModelSettings() {
              type="file"
              accept='.pkl'
              name='trained_model'
+             onChange={handleModelUpload}
             />
           </label>
+          <div className="model-upload-output">
+            {uploadSuccess && <p>{uploadSuccess}</p>}
+            {uploadError && <p style={{ color: 'red' }}>{uploadError}</p>}
+          </div>
+
         </div>
 
         <div className='model-training'>

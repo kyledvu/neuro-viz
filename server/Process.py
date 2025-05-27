@@ -25,8 +25,12 @@ def score_csv(file_path, output_folder):
     
     return output_path 
 
+model_path = "temp/download/trained_network.pkl"
+if not os.path.exists(model_path):
+    model_path = "default_trained_network.pkl"
+
 # Load pretrained model
-with open('default_trained_network.pkl', 'rb') as config_dictionary_file:
+with open(model_path, 'rb') as config_dictionary_file:
     best_model = pickle.load(config_dictionary_file)
 
 x_main_train = pd.read_csv("train_data_for_training.csv").to_numpy()[:,1:]
