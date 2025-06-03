@@ -228,6 +228,28 @@ input[type="file"] {
 .train-data-upload:hover {
   background-color: #343a40;
 }
+.model-settings .train-files {
+  position: absolute;
+  top: 100%;
+  width: 257px;
+  height: 175px;
+  flex-shrink: 0;
+  padding: 5px;
+  border: 1px solid #93a4b6;
+  border-radius: 5px;
+  background: #1a1a1a;
+  overflow-y: auto;
+}
+.model-settings .custom-checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.model-settings .form-check-label {
+  color: #f1f1f1;
+}
+
 .model-settings .model-output {
   position: absolute;
   top: 100%;

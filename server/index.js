@@ -41,6 +41,28 @@ function cleanupUploadedFiles(reqFiles) {
   });
 }
 
+function copyFilesToTrainTestFolders(files, trainIndicesRaw, testIndicesRaw) {
+  const trainIndices = JSON.parse(trainIndicesRaw);
+  const testIndices = JSON.parse(testIndicesRaw);
+
+  const trainDir = path.join(__dirname, 'temp/train_data');
+  const testDir = path.join(__dirname, 'temp/test_data');
+
+  files.forEach((file, index) => {
+    const srcPath = path.join(__dirname, file.path);
+    const destFileName = path.basename(file.path)
+
+    if (trainIndices.includes(index)) {
+      const destPath = path.join(trainDir, destFileName);
+      fs.copyFileSync(srcPath, destPath);
+    } else if (testIndices.includes(index)) {
+      const destPath = path.join(testDir, destFileName);
+      fs.copyFileSync(srcPath, destPath);
+    }
+  });
+
+}
+
 // Route to get the current model settings
 app.get("/getConfig", (req, res) => {
   fs.readFile(CONFIG_PATH, "utf8", (err, data) => {
@@ -77,68 +99,65 @@ app.post("/resetConfig", (req, res) => {
 
 // Route to train model from multiple file uploads
 app.post('/trainModel', upload.array('files'), (req, res) => {
-  const inputFilePaths = req.files.map(file => path.join(__dirname, file.path));
-  const splitProcess = spawn('python', ['SplitData.py', ...inputFilePaths]);
+  const { train_indices, test_indices } = req.body;
 
-  splitProcess.stderr.on('data', (data) => {
-    console.error(`Split script error: ${data}`);
+  try {
+    copyFilesToTrainTestFolders(req.files, train_indices, test_indices);
+  } catch (err) {
+    console.error("Error splitting files:", err);
+    cleanupUploadedFiles(req.files);
+    return res.status(500).send({ message: 'Failed to split files for training' });
+  }
+
+  const trainProcess = spawn('python', ['-u', 'TrainFromUpload.py']);
+
+  let trainOutput = '';
+
+  trainProcess.stdout.on('data', (data) => {
+    trainOutput += data.toString();
   });
 
-  splitProcess.on('close', (splitCode) => {
-    if (splitCode !== 0) {
+  trainProcess.stderr.on('data', (data) => {
+    console.error(`Training script error: ${data}`);
+  });
+
+  trainProcess.on('close', (trainCode) => {
+    if (trainCode !== 0) {
       cleanupUploadedFiles(req.files);
-      return res.status(500).send({ message: 'Splitting failed' });
+      return res.status(500).send({ message: 'Training failed' });
     }
 
-    const trainProcess = spawn('python', ['-u', 'TrainFromUpload.py']);
+    let outputData;
+    try {
+      outputData = JSON.parse(trainOutput);
+    } catch (e) {
+      console.error('Failed to parse training output:', e);
+      cleanupUploadedFiles(req.files);
+      return res.status(500).send({ message: 'Invalid training output' });
+    }
 
-    let trainOutput = '';
+    const modelSrcPath = path.join(__dirname, 'trained_network.pkl');
+    const modelDestPath = path.join(__dirname, 'temp/download', 'trained_network.pkl');
 
-    trainProcess.stdout.on('data', (data) => {
-      trainOutput += data.toString();
-    });
-
-    trainProcess.stderr.on('data', (data) => {
-      console.error(`Training script error: ${data}`);
-    });
-
-    trainProcess.on('close', (trainCode) => {
-      if (trainCode !== 0) {
+    fs.rename(modelSrcPath, modelDestPath, (err) => {
+      if (err) {
+        console.error("Error moving trained model:", err);
         cleanupUploadedFiles(req.files);
-        return res.status(500).send({ message: 'Training failed' });
+        return res.status(500).send({ message: 'Could not prepare download' });
       }
 
-      let outputData;
-      try {
-        outputData = JSON.parse(trainOutput);
-      } catch (e) {
-        console.error('Failed to parse training output:', e);
+      res.send({
+        ...outputData,
+        downloadUrl: '/temp/download/trained_network.pkl',
+      });
+
+      res.on('finish', () => {
         cleanupUploadedFiles(req.files);
-        return res.status(500).send({ message: 'Invalid training output' });
-      }
-
-      const modelSrcPath = path.join(__dirname, 'trained_network.pkl');
-      const modelDestPath = path.join(__dirname, 'temp/download', 'trained_network.pkl');
-
-      fs.rename(modelSrcPath, modelDestPath, (err) => {
-        if (err) {
-          console.error("Error moving trained model:", err);
-          cleanupUploadedFiles(req.files);
-          return res.status(500).send({ message: 'Could not prepare download' });
-        }
-
-        res.send({
-          ...outputData,
-          downloadUrl: '/temp/download/trained_network.pkl',
-        });
-
-        res.on('finish', () => {
-          cleanupUploadedFiles(req.files);
-        });
       });
     });
   });
 });
+
 
 // Route to upload a trained model (.pkl file)
 app.post('/uploadModel', upload.single('trained_model'), (req, res) => {
